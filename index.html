@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Filo — Barbería</title>
+<meta name="description" content="Filo — barbería de barrio. Reservá tu turno online en menos de un minuto: cortes clásicos, fades y arreglo de barba con precios claros.">
+<meta name="theme-color" content="#211A18">
+<meta property="og:title" content="Filo — Barbería">
+<meta property="og:description" content="Reservá tu turno de corte o barba en menos de un minuto, sin llamadas.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23211A18'/%3E%3Ctext x='50' y='70' font-family='Georgia,serif' font-size='58' font-weight='700' fill='%23A73F3F' text-anchor='middle'%3EF%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -25,6 +31,7 @@
     --font-body: "Inter", sans-serif;
   }
   * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
   body {
     margin: 0; background: var(--bg); color: var(--ink);
     font-family: var(--font-body);
@@ -33,6 +40,15 @@
   @media (max-width: 640px) { .wrap { padding: 0 20px; } }
   a { color: inherit; }
   button, input, select { font-family: inherit; }
+  #servicios, #equipo, #reservar, #opiniones { scroll-margin-top: 76px; }
+
+  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {
+    outline: 2px solid var(--wine-bright); outline-offset: 2px;
+  }
+
+  /* ---------- REVEAL ON SCROLL ---------- */
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity .6s ease, transform .6s ease; }
+  .reveal.is-visible { opacity: 1; transform: none; }
 
   /* ---------- NAV ---------- */
   .nav {
@@ -41,7 +57,7 @@
     border-bottom: 1px solid var(--line);
     padding: 16px 0;
   }
-  .nav-inner { display: flex; justify-content: space-between; align-items: center; }
+  .nav-inner { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
   .wordmark {
     font-family: var(--font-display); font-size: 24px; font-weight: 700;
     letter-spacing: 0.06em; text-transform: uppercase;
@@ -49,12 +65,30 @@
   .nav-links { display: flex; gap: 30px; font-size: 13.5px; color: var(--ink-soft); }
   .nav-links a { text-decoration: none; transition: color .2s ease; }
   .nav-links a:hover { color: var(--wine-bright); }
+  .nav-right { display: flex; align-items: center; gap: 14px; }
   @media (max-width: 640px) { .nav-links { display: none; } }
   .btn-nav {
     background: var(--wine); color: var(--ink); border: none;
     padding: 10px 18px; font-size: 13px; font-weight: 600; border-radius: 2px; cursor: pointer;
+    transition: background .2s ease, transform .2s ease;
   }
-  .btn-nav:hover { background: var(--wine-bright); }
+  .btn-nav:hover { background: var(--wine-bright); transform: translateY(-1px); }
+
+  .nav-toggle {
+    display: none; background: none; border: 1px solid var(--line-strong); color: var(--ink);
+    width: 38px; height: 38px; border-radius: 2px; cursor: pointer; font-size: 16px;
+  }
+  @media (max-width: 640px) { .nav-toggle { display: block; } }
+  .nav-mobile {
+    display: none; flex-direction: column; gap: 2px;
+    border-bottom: 1px solid var(--line); background: var(--bg-raised);
+  }
+  .nav-mobile.open { display: flex; }
+  .nav-mobile a, .nav-mobile button {
+    text-align: left; background: none; border: none; color: var(--ink);
+    padding: 14px 20px; font-size: 14.5px; text-decoration: none; border-top: 1px solid var(--line);
+    cursor: pointer;
+  }
 
   /* ---------- HERO ---------- */
   .hero {
@@ -78,13 +112,19 @@
   .btn-primary {
     background: var(--wine); color: var(--ink); border: none;
     padding: 14px 26px; font-size: 14.5px; font-weight: 600; border-radius: 2px; cursor: pointer;
+    transition: background .2s ease, transform .2s ease;
   }
-  .btn-primary:hover { background: var(--wine-bright); }
+  .btn-primary:hover { background: var(--wine-bright); transform: translateY(-1px); }
   .btn-ghost {
     background: none; border: 1px solid var(--line-strong); color: var(--ink);
     padding: 14px 22px; font-size: 14.5px; border-radius: 2px; text-decoration: none;
+    transition: border-color .2s ease, color .2s ease;
   }
   .btn-ghost:hover { border-color: var(--wine-bright); color: var(--wine-bright); }
+
+  .hero-stats { display: flex; gap: 34px; flex-wrap: wrap; margin-top: 40px; padding-top: 28px; border-top: 1px solid var(--line); }
+  .hero-stat b { display: block; font-family: var(--font-display); font-size: 26px; color: var(--ink); }
+  .hero-stat span { font-size: 11.5px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.05em; }
 
   /* ---------- SECTIONS ---------- */
   section { padding: 80px 0; }
@@ -99,11 +139,50 @@
   .services { border-top: 1px solid var(--line); }
   .service-row {
     display: flex; justify-content: space-between; align-items: baseline;
-    padding: 20px 0; border-bottom: 1px solid var(--line);
+    padding: 20px 0; border-bottom: 1px solid var(--line); transition: padding-left .2s ease, background .2s ease;
   }
+  .service-row:hover { padding-left: 8px; background: rgba(241,233,222,0.025); }
   .service-name { font-family: var(--font-display); font-size: 21px; text-transform: uppercase; letter-spacing: 0.01em; }
   .service-desc { font-size: 13px; color: var(--ink-faint); margin-top: 4px; }
   .service-price { font-family: var(--font-display); font-size: 22px; color: var(--wine-bright); white-space: nowrap; }
+
+  /* ---------- EQUIPO ---------- */
+  .team { background: var(--bg-raised); border-top: 1px solid var(--line); }
+  .team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  @media (max-width: 720px) { .team-grid { grid-template-columns: 1fr; } }
+  .team-card {
+    background: var(--bg-card); border: 1px solid var(--line); padding: 28px 24px; text-align: center;
+    opacity: 0; transform: translateY(16px); transition: opacity .5s ease, transform .5s ease, border-color .25s ease;
+  }
+  .team-grid.is-visible .team-card { opacity: 1; transform: none; }
+  .team-grid.is-visible .team-card:nth-child(1) { transition-delay: .05s; }
+  .team-grid.is-visible .team-card:nth-child(2) { transition-delay: .15s; }
+  .team-grid.is-visible .team-card:nth-child(3) { transition-delay: .25s; }
+  .team-card:hover { border-color: var(--line-strong); }
+  .avatar {
+    width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 16px;
+    background: var(--wine); color: var(--ink); display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-size: 20px; letter-spacing: 0.02em;
+  }
+  .team-name { font-family: var(--font-display); font-size: 18px; text-transform: uppercase; margin-bottom: 4px; }
+  .team-role { font-size: 12.5px; color: var(--wine-bright); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 10px; }
+  .team-desc { font-size: 13px; color: var(--ink-faint); line-height: 1.55; margin: 0; }
+
+  /* ---------- OPINIONES ---------- */
+  .testi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  @media (max-width: 860px) { .testi-grid { grid-template-columns: 1fr; } }
+  .testi-card {
+    background: var(--bg-card); border: 1px solid var(--line); padding: 24px;
+    opacity: 0; transform: translateY(16px); transition: opacity .5s ease, transform .5s ease;
+  }
+  .testi-grid.is-visible .testi-card { opacity: 1; transform: none; }
+  .testi-grid.is-visible .testi-card:nth-child(1) { transition-delay: .05s; }
+  .testi-grid.is-visible .testi-card:nth-child(2) { transition-delay: .15s; }
+  .testi-grid.is-visible .testi-card:nth-child(3) { transition-delay: .25s; }
+  .testi-stars { color: var(--wine-bright); font-size: 14px; letter-spacing: 2px; margin-bottom: 12px; }
+  .testi-quote { font-size: 14px; line-height: 1.65; color: var(--ink-soft); margin: 0 0 18px; }
+  .testi-name { font-size: 13px; font-weight: 600; }
+  .testi-meta { font-size: 12px; color: var(--ink-faint); }
 
   /* ---------- RESERVAS ---------- */
   .booking { background: var(--bg-raised); }
@@ -122,13 +201,16 @@
   .field input, .field select {
     width: 100%; padding: 11px 12px; background: var(--bg-raised);
     border: 1px solid var(--line-strong); color: var(--ink); font-size: 14.5px; border-radius: 2px;
+    transition: border-color .2s ease;
   }
+  .field input:hover, .field select:hover { border-color: var(--ink-faint); }
   .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .btn-submit {
     width: 100%; background: var(--wine); color: var(--ink); border: none;
     padding: 15px; font-size: 15px; font-weight: 600; border-radius: 2px; cursor: pointer; margin-top: 6px;
+    transition: background .2s ease, transform .2s ease;
   }
-  .btn-submit:hover { background: var(--wine-bright); }
+  .btn-submit:hover:not(:disabled) { background: var(--wine-bright); transform: translateY(-1px); }
   .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
   .form-msg { font-size: 13.5px; margin-top: 14px; display: none; }
   .form-msg.ok { color: var(--good); display: block; }
@@ -137,9 +219,23 @@
   /* ---------- FOOTER ---------- */
   footer {
     border-top: 1px solid var(--line); padding: 40px 0;
+  }
+  .footer-top {
     display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;
+    margin-bottom: 18px;
   }
   footer p { color: var(--ink-faint); font-size: 13px; margin: 0; }
+  .footer-stack { display: flex; gap: 8px; flex-wrap: wrap; }
+  .stack-pill {
+    border: 1px solid var(--line-strong); padding: 4px 11px; font-size: 11px;
+    border-radius: 20px; color: var(--ink-faint);
+  }
+  .footer-bottom {
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+    border-top: 1px solid var(--line); padding-top: 18px;
+  }
+  .footer-bottom a { font-size: 13px; color: var(--ink-soft); text-decoration: none; transition: color .2s ease; }
+  .footer-bottom a:hover { color: var(--wine-bright); }
 </style>
 </head>
 <body>
@@ -149,9 +245,18 @@
     <div class="wordmark">Filo</div>
     <div class="nav-links">
       <a href="#servicios">Servicios</a>
+      <a href="#equipo">Equipo</a>
       <a href="#reservar">Reservar</a>
     </div>
-    <button class="btn-nav" onclick="document.getElementById('reservar').scrollIntoView({behavior:'smooth'})">Reservar turno</button>
+    <div class="nav-right">
+      <button class="btn-nav" onclick="document.getElementById('reservar').scrollIntoView({behavior:'smooth'})">Reservar turno</button>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Abrir menú" aria-expanded="false">☰</button>
+    </div>
+  </div>
+  <div class="nav-mobile" id="nav-mobile">
+    <a href="#servicios">Servicios</a>
+    <a href="#equipo">Equipo</a>
+    <a href="#reservar">Reservar</a>
   </div>
 </nav>
 
@@ -165,22 +270,37 @@
       <button class="btn-primary" onclick="document.getElementById('reservar').scrollIntoView({behavior:'smooth'})">Reservar ahora</button>
       <a class="btn-ghost" href="#servicios">Ver servicios y precios</a>
     </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><b>+500</b><span>Cortes al mes</span></div>
+      <div class="hero-stat"><b>4.9★</b><span>Valoración promedio</span></div>
+      <div class="hero-stat"><b>6</b><span>Años de oficio</span></div>
+    </div>
   </div>
 </header>
 
 <section id="servicios" class="services">
   <div class="wrap">
-    <div class="section-head">
+    <div class="section-head reveal">
       <h2>Servicios</h2>
       <p>Precios claros, sin sorpresas al momento de pagar.</p>
     </div>
-    <div id="services-list"></div>
+    <div id="services-list" class="reveal"></div>
+  </div>
+</section>
+
+<section id="equipo" class="team">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <h2>El equipo</h2>
+      <p>Manos con oficio, no aprendices.</p>
+    </div>
+    <div class="team-grid" id="team-grid"></div>
   </div>
 </section>
 
 <section id="reservar" class="booking">
   <div class="wrap booking-grid">
-    <div class="booking-info">
+    <div class="booking-info reveal">
       <div class="section-head" style="margin-bottom: 18px;">
         <h2>Reservá tu turno</h2>
       </div>
@@ -192,7 +312,7 @@
       </div>
     </div>
 
-    <div class="form-card">
+    <div class="form-card reveal">
       <form id="booking-form">
         <div class="field">
           <label for="nombre">Nombre</label>
@@ -200,7 +320,7 @@
         </div>
         <div class="field">
           <label for="telefono">Teléfono</label>
-          <input type="tel" id="telefono" required placeholder="Para confirmarte el turno">
+          <input type="tel" id="telefono" required inputmode="tel" placeholder="Para confirmarte el turno">
         </div>
         <div class="field">
           <label for="servicio">Servicio</label>
@@ -229,16 +349,36 @@
           </div>
         </div>
         <button type="submit" class="btn-submit" id="submit-btn">Confirmar reserva</button>
-        <div class="form-msg" id="form-msg"></div>
+        <div class="form-msg" id="form-msg" role="status" aria-live="polite"></div>
       </form>
     </div>
   </div>
 </section>
 
+<section id="opiniones" class="opiniones">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <h2>Lo que dicen</h2>
+      <p>Clientes que ya pasaron por la silla.</p>
+    </div>
+    <div class="testi-grid" id="testi-grid"></div>
+  </div>
+</section>
+
 <footer>
-  <div class="wrap" style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:16px; width:100%;">
-    <p>Filo Barbería — página de muestra construida como pieza de portafolio.</p>
-    <p>Av. Siempre Viva 123 · Turnos con reserva previa</p>
+  <div class="wrap">
+    <div class="footer-top">
+      <p>Filo Barbería — página de muestra construida como pieza de portafolio.</p>
+      <div class="footer-stack">
+        <span class="stack-pill">HTML · CSS · JS</span>
+        <span class="stack-pill">Supabase</span>
+        <span class="stack-pill">Netlify</span>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>Av. Siempre Viva 123 · Turnos con reserva previa</p>
+      <a href="https://github.com/Lissandra2009/Barberia" target="_blank" rel="noopener">Ver código en GitHub ↗</a>
+    </div>
   </div>
 </footer>
 
@@ -265,10 +405,65 @@
     </div>
   `).join("");
 
+  // ============ EQUIPO ============
+  const TEAM = [
+    { initials: "RM", name: "Rodrigo Medina", role: "Barbero principal", desc: "Especialista en fades y degradados de precisión." },
+    { initials: "JS", name: "Julián Soto", role: "Barbero", desc: "Cortes clásicos y arreglo de barba con navaja." },
+    { initials: "MA", name: "Mateo Aguirre", role: "Barbero junior", desc: "Formado en la casa, mano firme y prolija." },
+  ];
+  document.getElementById("team-grid").innerHTML = TEAM.map(t => `
+    <div class="team-card">
+      <div class="avatar">${t.initials}</div>
+      <div class="team-name">${t.name}</div>
+      <div class="team-role">${t.role}</div>
+      <p class="team-desc">${t.desc}</p>
+    </div>
+  `).join("");
+
+  // ============ OPINIONES ============
+  const TESTIMONIALS = [
+    { quote: "Pedí turno desde el celu en dos minutos y me atendieron a la hora exacta. Se nota el oficio.", name: "Facundo R.", meta: "Cliente desde 2023" },
+    { quote: "El fade quedó impecable y no tuve que esperar ni llamar por teléfono para reservar.", name: "Ignacio P.", meta: "Cliente frecuente" },
+    { quote: "Ambiente cómodo, buena onda y el sistema de reservas es re práctico.", name: "Tomás L.", meta: "Cliente nuevo" },
+  ];
+  document.getElementById("testi-grid").innerHTML = TESTIMONIALS.map(t => `
+    <div class="testi-card">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-quote">"${t.quote}"</p>
+      <div class="testi-name">${t.name}</div>
+      <div class="testi-meta">${t.meta}</div>
+    </div>
+  `).join("");
+
+  // ============ MENÚ MOBILE ============
+  const navToggle = document.getElementById("nav-toggle");
+  const navMobile = document.getElementById("nav-mobile");
+  navToggle.addEventListener("click", () => {
+    const isOpen = navMobile.classList.toggle("open");
+    navToggle.setAttribute("aria-expanded", String(isOpen));
+  });
+  navMobile.querySelectorAll("a").forEach(a => a.addEventListener("click", () => {
+    navMobile.classList.remove("open");
+    navToggle.setAttribute("aria-expanded", "false");
+  }));
+
+  // ============ ANIMACIONES AL SCROLLEAR ============
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("is-visible");
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  document.querySelectorAll(".reveal, .team-grid, .testi-grid").forEach(el => revealObserver.observe(el));
+
   // ============ FORM SUBMIT ============
   const form = document.getElementById("booking-form");
   const submitBtn = document.getElementById("submit-btn");
   const msgEl = document.getElementById("form-msg");
+  const fechaInput = document.getElementById("fecha");
+  fechaInput.min = new Date().toISOString().split("T")[0];
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -326,6 +521,7 @@
     msgEl.textContent = `Listo, ${payload.nombre} — te esperamos el ${payload.fecha} a las ${payload.hora}.`;
     msgEl.className = "form-msg ok";
     form.reset();
+    fechaInput.min = new Date().toISOString().split("T")[0];
     submitBtn.disabled = false;
     submitBtn.textContent = "Confirmar reserva";
   });
