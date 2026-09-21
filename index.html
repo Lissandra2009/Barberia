@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Filo — Barbería</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --bg: #211A18;
+    --bg-raised: #2A211E;
+    --bg-card: #2F2521;
+    --ink: #F1E9DE;
+    --ink-soft: #B7A99A;
+    --ink-faint: #7C6F62;
+    --wine: #7A2E2E;
+    --wine-bright: #A73F3F;
+    --line: rgba(241,233,222,0.10);
+    --line-strong: rgba(241,233,222,0.22);
+    --good: #7FA37F;
+    --font-display: "Oswald", sans-serif;
+    --font-body: "Inter", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--font-body);
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 32px; }
+  @media (max-width: 640px) { .wrap { padding: 0 20px; } }
+  a { color: inherit; }
+  button, input, select { font-family: inherit; }
+
+  /* ---------- NAV ---------- */
+  .nav {
+    position: sticky; top: 0; z-index: 30;
+    background: rgba(33,26,24,0.92); backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--line);
+    padding: 16px 0;
+  }
+  .nav-inner { display: flex; justify-content: space-between; align-items: center; }
+  .wordmark {
+    font-family: var(--font-display); font-size: 24px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .nav-links { display: flex; gap: 30px; font-size: 13.5px; color: var(--ink-soft); }
+  .nav-links a { text-decoration: none; transition: color .2s ease; }
+  .nav-links a:hover { color: var(--wine-bright); }
+  @media (max-width: 640px) { .nav-links { display: none; } }
+  .btn-nav {
+    background: var(--wine); color: var(--ink); border: none;
+    padding: 10px 18px; font-size: 13px; font-weight: 600; border-radius: 2px; cursor: pointer;
+  }
+  .btn-nav:hover { background: var(--wine-bright); }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    position: relative; overflow: hidden;
+    padding: 90px 0 70px;
+    border-bottom: 1px solid var(--line);
+  }
+  .hero-stripes {
+    position: absolute; top: -40%; right: -12%; width: 60%; height: 180%;
+    background: repeating-linear-gradient(115deg, var(--wine) 0 22px, transparent 22px 46px);
+    opacity: 0.14; pointer-events: none;
+  }
+  .hero-inner { position: relative; max-width: 620px; }
+  .eyebrow { font-size: 12.5px; color: var(--wine-bright); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 16px; }
+  .hero h1 {
+    font-family: var(--font-display); font-weight: 700; text-transform: uppercase;
+    font-size: clamp(38px, 6vw, 60px); line-height: 1.02; margin: 0 0 22px; letter-spacing: 0.01em;
+  }
+  .hero p { color: var(--ink-soft); font-size: 16.5px; line-height: 1.65; max-width: 46ch; margin: 0 0 30px; }
+  .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+  .btn-primary {
+    background: var(--wine); color: var(--ink); border: none;
+    padding: 14px 26px; font-size: 14.5px; font-weight: 600; border-radius: 2px; cursor: pointer;
+  }
+  .btn-primary:hover { background: var(--wine-bright); }
+  .btn-ghost {
+    background: none; border: 1px solid var(--line-strong); color: var(--ink);
+    padding: 14px 22px; font-size: 14.5px; border-radius: 2px; text-decoration: none;
+  }
+  .btn-ghost:hover { border-color: var(--wine-bright); color: var(--wine-bright); }
+
+  /* ---------- SECTIONS ---------- */
+  section { padding: 80px 0; }
+  .section-head { max-width: 56ch; margin-bottom: 42px; }
+  .section-head h2 {
+    font-family: var(--font-display); font-weight: 700; text-transform: uppercase;
+    font-size: clamp(26px, 4vw, 36px); margin: 0 0 12px; letter-spacing: 0.01em;
+  }
+  .section-head p { color: var(--ink-soft); font-size: 15px; line-height: 1.6; margin: 0; }
+
+  /* ---------- SERVICIOS ---------- */
+  .services { border-top: 1px solid var(--line); }
+  .service-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 20px 0; border-bottom: 1px solid var(--line);
+  }
+  .service-name { font-family: var(--font-display); font-size: 21px; text-transform: uppercase; letter-spacing: 0.01em; }
+  .service-desc { font-size: 13px; color: var(--ink-faint); margin-top: 4px; }
+  .service-price { font-family: var(--font-display); font-size: 22px; color: var(--wine-bright); white-space: nowrap; }
+
+  /* ---------- RESERVAS ---------- */
+  .booking { background: var(--bg-raised); }
+  .booking-grid { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 50px; }
+  @media (max-width: 860px) { .booking-grid { grid-template-columns: 1fr; } }
+
+  .booking-info p { color: var(--ink-soft); font-size: 15px; line-height: 1.7; margin: 0 0 18px; }
+  .booking-hours { border-top: 1px solid var(--line); margin-top: 20px; padding-top: 20px; }
+  .booking-hours div { display: flex; justify-content: space-between; font-size: 13.5px; padding: 6px 0; color: var(--ink-soft); }
+
+  .form-card {
+    background: var(--bg-card); border: 1px solid var(--line); padding: 30px;
+  }
+  .field { margin-bottom: 18px; }
+  .field label { display: block; font-size: 12.5px; color: var(--ink-faint); margin-bottom: 7px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .field input, .field select {
+    width: 100%; padding: 11px 12px; background: var(--bg-raised);
+    border: 1px solid var(--line-strong); color: var(--ink); font-size: 14.5px; border-radius: 2px;
+  }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .btn-submit {
+    width: 100%; background: var(--wine); color: var(--ink); border: none;
+    padding: 15px; font-size: 15px; font-weight: 600; border-radius: 2px; cursor: pointer; margin-top: 6px;
+  }
+  .btn-submit:hover { background: var(--wine-bright); }
+  .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+  .form-msg { font-size: 13.5px; margin-top: 14px; display: none; }
+  .form-msg.ok { color: var(--good); display: block; }
+  .form-msg.err { color: var(--wine-bright); display: block; }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    border-top: 1px solid var(--line); padding: 40px 0;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;
+  }
+  footer p { color: var(--ink-faint); font-size: 13px; margin: 0; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-inner">
+    <div class="wordmark">Filo</div>
+    <div class="nav-links">
+      <a href="#servicios">Servicios</a>
+      <a href="#reservar">Reservar</a>
+    </div>
+    <button class="btn-nav" onclick="document.getElementById('reservar').scrollIntoView({behavior:'smooth'})">Reservar turno</button>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="hero-stripes"></div>
+  <div class="wrap hero-inner">
+    <div class="eyebrow">Barbería de barrio, oficio real</div>
+    <h1>Cortes con oficio, sin vueltas.</h1>
+    <p>Reservá tu turno en menos de un minuto. Sin llamadas, sin esperar respuesta — elegís el servicio, el día y la hora, y listo.</p>
+    <div class="hero-actions">
+      <button class="btn-primary" onclick="document.getElementById('reservar').scrollIntoView({behavior:'smooth'})">Reservar ahora</button>
+      <a class="btn-ghost" href="#servicios">Ver servicios y precios</a>
+    </div>
+  </div>
+</header>
+
+<section id="servicios" class="services">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Servicios</h2>
+      <p>Precios claros, sin sorpresas al momento de pagar.</p>
+    </div>
+    <div id="services-list"></div>
+  </div>
+</section>
+
+<section id="reservar" class="booking">
+  <div class="wrap booking-grid">
+    <div class="booking-info">
+      <div class="section-head" style="margin-bottom: 18px;">
+        <h2>Reservá tu turno</h2>
+      </div>
+      <p>Completá tus datos y el turno queda guardado al instante. Te esperamos puntual, con la silla lista.</p>
+      <div class="booking-hours">
+        <div><span>Lunes a viernes</span><span>9:00 – 19:00</span></div>
+        <div><span>Sábados</span><span>9:00 – 15:00</span></div>
+        <div><span>Domingos</span><span>Cerrado</span></div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <form id="booking-form">
+        <div class="field">
+          <label for="nombre">Nombre</label>
+          <input type="text" id="nombre" required placeholder="Tu nombre">
+        </div>
+        <div class="field">
+          <label for="telefono">Teléfono</label>
+          <input type="tel" id="telefono" required placeholder="Para confirmarte el turno">
+        </div>
+        <div class="field">
+          <label for="servicio">Servicio</label>
+          <select id="servicio" required>
+            <option value="">Elegí un servicio</option>
+            <option>Corte clásico — $12</option>
+            <option>Fade — $15</option>
+            <option>Arreglo de barba — $8</option>
+            <option>Combo corte + barba — $18</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="fecha">Fecha</label>
+            <input type="date" id="fecha" required>
+          </div>
+          <div class="field">
+            <label for="hora">Hora</label>
+            <select id="hora" required>
+              <option value="">Elegí</option>
+              <option>09:00</option><option>10:00</option><option>11:00</option>
+              <option>12:00</option><option>13:00</option><option>14:00</option>
+              <option>15:00</option><option>16:00</option><option>17:00</option>
+              <option>18:00</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="btn-submit" id="submit-btn">Confirmar reserva</button>
+        <div class="form-msg" id="form-msg"></div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap" style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:16px; width:100%;">
+    <p>Filo Barbería — página de muestra construida como pieza de portafolio.</p>
+    <p>Av. Siempre Viva 123 · Turnos con reserva previa</p>
+  </div>
+</footer>
+
+<script>
+  // ============ CONFIG SUPABASE ============
+  const SUPABASE_URL = "https://vavgmkxugeemvlfnrypm.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhdmdta3h1Z2VlbXZsZm5yeXBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk5OTg0NjksImV4cCI6MjEwNTU3NDQ2OX0.PgD4HoyiXf0aBdZLg8-kAu4vUYWCtOqiW-8PenQbxGg";
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // ============ SERVICIOS ============
+  const SERVICES = [
+    { name: "Corte clásico", desc: "Tijera y máquina, terminado prolijo", price: "$12" },
+    { name: "Fade", desc: "Degradado preciso, cualquier estilo", price: "$15" },
+    { name: "Arreglo de barba", desc: "Perfilado con navaja", price: "$8" },
+    { name: "Combo corte + barba", desc: "Los dos servicios juntos", price: "$18" },
+  ];
+  document.getElementById("services-list").innerHTML = SERVICES.map(s => `
+    <div class="service-row">
+      <div>
+        <div class="service-name">${s.name}</div>
+        <div class="service-desc">${s.desc}</div>
+      </div>
+      <div class="service-price">${s.price}</div>
+    </div>
+  `).join("");
+
+  // ============ FORM SUBMIT ============
+  const form = document.getElementById("booking-form");
+  const submitBtn = document.getElementById("submit-btn");
+  const msgEl = document.getElementById("form-msg");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Guardando...";
+    msgEl.className = "form-msg";
+
+    const payload = {
+      nombre: document.getElementById("nombre").value.trim(),
+      telefono: document.getElementById("telefono").value.trim(),
+      servicio: document.getElementById("servicio").value,
+      fecha: document.getElementById("fecha").value,
+      hora: document.getElementById("hora").value,
+    };
+
+    // Chequeo previo: ¿ese día y esa hora ya tienen una reserva activa?
+    const { data: existentes, error: checkError } = await supabaseClient
+      .from("reservas")
+      .select("id")
+      .eq("fecha", payload.fecha)
+      .eq("hora", payload.hora)
+      .neq("estado", "cancelado");
+
+    if (checkError) {
+      msgEl.textContent = "No se pudo verificar el horario. Probá de nuevo en un momento.";
+      msgEl.className = "form-msg err";
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Confirmar reserva";
+      console.error(checkError);
+      return;
+    }
+
+    if (existentes.length > 0) {
+      msgEl.textContent = "Ese horario ya está reservado. Elegí otro día u hora.";
+      msgEl.className = "form-msg err";
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Confirmar reserva";
+      return;
+    }
+
+    const { error } = await supabaseClient.from("reservas").insert([payload]);
+
+    if (error) {
+      // 23505 = violación de restricción única (dos reservas al mismo tiempo para el mismo horario)
+      msgEl.textContent = error.code === "23505"
+        ? "Ese horario se acaba de ocupar. Elegí otro día u hora."
+        : "No se pudo guardar la reserva. Probá de nuevo en un momento.";
+      msgEl.className = "form-msg err";
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Confirmar reserva";
+      console.error(error);
+      return;
+    }
+
+    msgEl.textContent = `Listo, ${payload.nombre} — te esperamos el ${payload.fecha} a las ${payload.hora}.`;
+    msgEl.className = "form-msg ok";
+    form.reset();
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Confirmar reserva";
+  });
+</script>
+</body>
+</html>

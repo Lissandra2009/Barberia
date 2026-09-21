@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Filo — Panel de administración</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --bg: #211A18; --bg-raised: #2A211E; --bg-card: #2F2521;
+    --ink: #F1E9DE; --ink-soft: #B7A99A; --ink-faint: #7C6F62;
+    --wine: #7A2E2E; --wine-bright: #A73F3F;
+    --line: rgba(241,233,222,0.10); --line-strong: rgba(241,233,222,0.22);
+    --good: #7FA37F; --warn: #C99A4B;
+    --font-display: "Oswald", sans-serif; --font-body: "Inter", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 40px 32px 80px; }
+  button, input { font-family: inherit; }
+
+  /* GATE */
+  .gate {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  }
+  .gate-card {
+    background: var(--bg-card); border: 1px solid var(--line); padding: 40px;
+    width: 320px; text-align: center;
+  }
+  .gate-card h1 { font-family: var(--font-display); text-transform: uppercase; font-size: 24px; margin: 0 0 8px; }
+  .gate-card p { color: var(--ink-faint); font-size: 13.5px; margin: 0 0 22px; }
+  .gate-card input {
+    width: 100%; padding: 12px; background: var(--bg-raised); border: 1px solid var(--line-strong);
+    color: var(--ink); border-radius: 2px; margin-bottom: 14px; text-align: center; font-size: 15px;
+  }
+  .gate-card button {
+    width: 100%; background: var(--wine); color: var(--ink); border: none;
+    padding: 13px; border-radius: 2px; font-weight: 600; cursor: pointer;
+  }
+  .gate-error { color: var(--wine-bright); font-size: 13px; margin-top: 10px; display: none; }
+
+  /* PANEL */
+  #panel { display: none; }
+  .panel-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 30px; flex-wrap: wrap; gap: 10px; }
+  .panel-head h1 { font-family: var(--font-display); text-transform: uppercase; font-size: 28px; margin: 0; }
+  .panel-head p { color: var(--ink-faint); font-size: 13.5px; margin: 4px 0 0; }
+  .btn-refresh {
+    background: none; border: 1px solid var(--line-strong); color: var(--ink);
+    padding: 9px 16px; border-radius: 2px; cursor: pointer; font-size: 13px;
+  }
+  .btn-refresh:hover { border-color: var(--wine-bright); }
+
+  .stats { display: flex; gap: 14px; margin-bottom: 30px; flex-wrap: wrap; }
+  .stat-chip {
+    background: var(--bg-card); border: 1px solid var(--line); padding: 14px 20px;
+    font-size: 13px; color: var(--ink-soft);
+  }
+  .stat-chip b { display: block; font-family: var(--font-display); font-size: 24px; color: var(--ink); }
+
+  .table-wrap { background: var(--bg-card); border: 1px solid var(--line); overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 720px; }
+  th {
+    text-align: left; padding: 14px 16px; color: var(--ink-faint); font-weight: 500;
+    text-transform: uppercase; font-size: 11.5px; letter-spacing: 0.04em; border-bottom: 1px solid var(--line);
+  }
+  td { padding: 14px 16px; border-bottom: 1px solid var(--line); color: var(--ink); }
+  tr:last-child td { border-bottom: none; }
+  .status-pill {
+    display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11.5px;
+    border: 1px solid var(--line-strong);
+  }
+  .status-pill.pendiente { color: var(--warn); border-color: var(--warn); }
+  .status-pill.confirmado { color: var(--good); border-color: var(--good); }
+  .status-pill.cancelado { color: var(--wine-bright); border-color: var(--wine-bright); }
+  .row-actions { display: flex; gap: 6px; }
+  .row-actions button {
+    background: none; border: 1px solid var(--line-strong); color: var(--ink-soft);
+    padding: 6px 10px; border-radius: 2px; font-size: 11.5px; cursor: pointer;
+  }
+  .row-actions button:hover { border-color: var(--wine-bright); color: var(--ink); }
+  .empty { padding: 50px; text-align: center; color: var(--ink-faint); }
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <h1>Filo — Admin</h1>
+    <p>Ingresá la clave de acceso para ver las reservas.</p>
+    <input type="password" id="gate-pass" placeholder="Clave de acceso">
+    <button onclick="tryUnlock()">Entrar</button>
+    <div class="gate-error" id="gate-error">Clave incorrecta, probá de nuevo.</div>
+  </div>
+</div>
+
+<div class="wrap" id="panel">
+  <div class="panel-head">
+    <div>
+      <h1>Reservas</h1>
+      <p>Panel de administración — datos en vivo desde la base de datos.</p>
+    </div>
+    <button class="btn-refresh" onclick="loadReservas()">Actualizar</button>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="table-wrap">
+    <table id="reservas-table">
+      <thead>
+        <tr>
+          <th>Cliente</th><th>Teléfono</th><th>Servicio</th><th>Fecha</th><th>Hora</th><th>Estado</th><th></th>
+        </tr>
+      </thead>
+      <tbody id="reservas-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  // ============ CONFIG ============
+  const SUPABASE_URL = "https://vavgmkxugeemvlfnrypm.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhdmdta3h1Z2VlbXZsZm5yeXBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk5OTg0NjksImV4cCI6MjEwNTU3NDQ2OX0.PgD4HoyiXf0aBdZLg8-kAu4vUYWCtOqiW-8PenQbxGg";
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // TODO: cambiá esta clave por la que quieras usar vos.
+  // Nota: esto es una traba simple del lado del cliente, pensada para un demo de portafolio,
+  // no un login real. Para un panel de producción de verdad conviene usar Supabase Auth.
+  const ACCESS_CODE = "filo2026";
+
+  function tryUnlock() {
+    const val = document.getElementById("gate-pass").value;
+    if (val === ACCESS_CODE) {
+      document.getElementById("gate").style.display = "none";
+      document.getElementById("panel").style.display = "block";
+      loadReservas();
+    } else {
+      document.getElementById("gate-error").style.display = "block";
+    }
+  }
+  document.getElementById("gate-pass").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") tryUnlock();
+  });
+
+  async function loadReservas() {
+    const body = document.getElementById("reservas-body");
+    body.innerHTML = `<tr><td colspan="7" class="empty">Cargando...</td></tr>`;
+
+    const { data, error } = await supabaseClient
+      .from("reservas")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      body.innerHTML = `<tr><td colspan="7" class="empty">No se pudo cargar: ${error.message}</td></tr>`;
+      return;
+    }
+
+    renderStats(data);
+
+    if (!data.length) {
+      body.innerHTML = `<tr><td colspan="7" class="empty">Todavía no hay reservas.</td></tr>`;
+      return;
+    }
+
+    body.innerHTML = data.map(r => `
+      <tr>
+        <td>${r.nombre}</td>
+        <td>${r.telefono}</td>
+        <td>${r.servicio}</td>
+        <td>${r.fecha}</td>
+        <td>${r.hora}</td>
+        <td><span class="status-pill ${r.estado}">${r.estado}</span></td>
+        <td>
+          <div class="row-actions">
+            <button onclick="updateEstado('${r.id}', 'confirmado')">Confirmar</button>
+            <button onclick="updateEstado('${r.id}', 'cancelado')">Cancelar</button>
+          </div>
+        </td>
+      </tr>
+    `).join("");
+  }
+
+  function renderStats(data) {
+    const total = data.length;
+    const pendientes = data.filter(r => r.estado === "pendiente").length;
+    const confirmadas = data.filter(r => r.estado === "confirmado").length;
+    document.getElementById("stats").innerHTML = `
+      <div class="stat-chip"><b>${total}</b>Reservas totales</div>
+      <div class="stat-chip"><b>${pendientes}</b>Pendientes</div>
+      <div class="stat-chip"><b>${confirmadas}</b>Confirmadas</div>
+    `;
+  }
+
+  async function updateEstado(id, estado) {
+    const { error } = await supabaseClient.from("reservas").update({ estado }).eq("id", id);
+    if (error) { alert("No se pudo actualizar: " + error.message); return; }
+    loadReservas();
+  }
+</script>
+</body>
+</html>
